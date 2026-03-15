@@ -16,9 +16,12 @@ export function PDFViewer({ onPageChange }: PDFViewerProps) {
   const [totalPages, setTotalPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageHeight, setPageHeight] = useState(window.innerHeight - 80);
-  const [pageOpacity, setPageOpacity] = useState(1);
+  const [pageOpacity, setPageOpacity] = useState(0);
+  const [loaded, setLoaded] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const transitionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const firstRenderTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isFirstRender = useRef(true);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -32,9 +35,8 @@ export function PDFViewer({ onPageChange }: PDFViewerProps) {
 
   useEffect(() => {
     return () => {
-      if (transitionTimer.current !== null) {
-        clearTimeout(transitionTimer.current);
-      }
+      if (transitionTimer.current !== null) clearTimeout(transitionTimer.current);
+      if (firstRenderTimer.current !== null) clearTimeout(firstRenderTimer.current);
     };
   }, []);
 
@@ -43,7 +45,15 @@ export function PDFViewer({ onPageChange }: PDFViewerProps) {
   }, []);
 
   const handleRenderSuccess = useCallback(() => {
-    setPageOpacity(1);
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      firstRenderTimer.current = setTimeout(() => {
+        setLoaded(true);
+        setPageOpacity(1);
+      }, 1000);
+    } else {
+      setPageOpacity(1);
+    }
   }, []);
 
   const goTo = useCallback((page: number) => {
@@ -90,7 +100,7 @@ export function PDFViewer({ onPageChange }: PDFViewerProps) {
       )}
       <div className="pdf-viewer">
         <div className="pdf-document-container" ref={containerRef}>
-          <div className="pdf-document-wrapper" style={{ opacity: pageOpacity }}>
+          <div className="pdf-document-wrapper" style={{ opacity: pageOpacity, transition: 'opacity 0.1s ease' }}>
             <Document file={PDF_FILE} onLoadSuccess={handleLoadSuccess}>
               <PDFPage
                 pageNumber={currentPage}
@@ -99,12 +109,14 @@ export function PDFViewer({ onPageChange }: PDFViewerProps) {
               />
             </Document>
           </div>
+          <div className="pdf-load-cover" style={{ opacity: loaded ? 0 : 1 }} />
         </div>
         <PDFNavigation
           currentPage={currentPage}
           totalPages={totalPages}
           onPrev={goToPrev}
           onNext={goToNext}
+          loaded={loaded}
         />
       </div>
     </>

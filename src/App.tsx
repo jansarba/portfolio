@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { CSSProperties } from 'react';
 import './config/pdf';
 import { PDFViewer } from './components/PDFViewer';
 import { usePageBackground } from './hooks/usePageBackground';
@@ -11,7 +12,7 @@ function App() {
   return (
     <div
       className="app"
-      style={{ backgroundColor: background, color: foreground }}
+      style={{ backgroundColor: background, color: foreground, '--bg': background } as CSSProperties}
     >
       <div id="pdf-bloom-portal" className="pdf-bloom-portal" />
       <div className="pdf-background-blur" />

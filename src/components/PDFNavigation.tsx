@@ -3,11 +3,12 @@ interface PDFNavigationProps {
   totalPages: number;
   onPrev: () => void;
   onNext: () => void;
+  loaded: boolean;
 }
 
-export function PDFNavigation({ currentPage, totalPages, onPrev, onNext }: PDFNavigationProps) {
+export function PDFNavigation({ currentPage, totalPages, onPrev, onNext, loaded }: PDFNavigationProps) {
   return (
-    <div className="pdf-navigation">
+    <div className={`pdf-navigation${loaded ? ' is-loaded' : ''}`}>
       <button
         className="pdf-nav-btn"
         onClick={onPrev}
