@@ -5,4 +5,5 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   import.meta.url,
 ).toString();
 
-export const PDF_FILE = '/Portfolio_JanSarba_Fullsize.pdf';
+export const PDF_FILE =
+  `${import.meta.env.BASE_URL}Portfolio_JanSarba_Fullsize.pdf`;
