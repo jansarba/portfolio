@@ -15,7 +15,8 @@ interface PDFViewerProps {
 export function PDFViewer({ onPageChange }: PDFViewerProps) {
   const [totalPages, setTotalPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageHeight, setPageHeight] = useState(window.innerHeight - 80);
+  const [containerHeight, setContainerHeight] = useState(window.innerHeight - 80);
+  const [containerWidth, setContainerWidth] = useState(window.innerWidth);
   const [pageOpacity, setPageOpacity] = useState(0);
   const [loaded, setLoaded] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -23,14 +24,27 @@ export function PDFViewer({ onPageChange }: PDFViewerProps) {
   const firstRenderTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFirstRender = useRef(true);
 
+  const PORTRAIT_RATIO = 1.414;
+  const availableWidth = containerWidth - 24;
+  const isWidthBound = availableWidth * PORTRAIT_RATIO < containerHeight;
+  const pageDimension = isWidthBound
+    ? { width: availableWidth }
+    : { height: containerHeight };
+
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     const ro = new ResizeObserver(entries => {
-      setPageHeight(entries[0].contentRect.height);
+      setContainerHeight(entries[0].contentRect.height);
     });
     ro.observe(el);
     return () => ro.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const onResize = () => setContainerWidth(window.innerWidth);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
   }, []);
 
   useEffect(() => {
@@ -52,7 +66,7 @@ export function PDFViewer({ onPageChange }: PDFViewerProps) {
         setPageOpacity(1);
       }, 1000);
     } else {
-      setPageOpacity(1);
+      requestAnimationFrame(() => setPageOpacity(1));
     }
   }, []);
 
@@ -93,7 +107,7 @@ export function PDFViewer({ onPageChange }: PDFViewerProps) {
       {bloomPortal && createPortal(
         <div style={{ opacity: pageOpacity, transition: 'opacity 0.1s ease' }} aria-hidden="true">
           <Document file={PDF_FILE}>
-            <PDFBloomPage pageNumber={currentPage} height={pageHeight} />
+            <PDFBloomPage pageNumber={currentPage} {...pageDimension} />
           </Document>
         </div>,
         bloomPortal
@@ -104,7 +118,7 @@ export function PDFViewer({ onPageChange }: PDFViewerProps) {
             <Document file={PDF_FILE} onLoadSuccess={handleLoadSuccess}>
               <PDFPage
                 pageNumber={currentPage}
-                height={pageHeight}
+                {...pageDimension}
                 onRenderSuccess={handleRenderSuccess}
               />
             </Document>
