@@ -66,7 +66,7 @@ export function PDFViewer({ onPageChange }: PDFViewerProps) {
         setPageOpacity(1);
       }, 1000);
     } else {
-      setPageOpacity(1);
+      requestAnimationFrame(() => setPageOpacity(1));
     }
   }, []);
 
